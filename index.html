@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>小四英文單字挑戰</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body { font-family: 'PingFang TC', sans-serif; background: #fff9e6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        #quiz-container { background: #fff; padding: 40px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); width: 100%; max-width: 550px; text-align: center; border: 4px solid #ffde59; }
+        .page { display: none; }
+        .active { display: block; }
+        .hint { font-size: 38px; font-weight: bold; color: #444; margin-bottom: 15px; }
+        .speaker-btn { background: #e3f2fd; border: 2px solid #3498db; border-radius: 50%; width: 70px; height: 70px; font-size: 36px; cursor: pointer; color: #3498db; margin-bottom: 25px; transition: 0.2s; }
+        input { width: 100%; padding: 18px; font-size: 24px; border: 3px solid #eee; border-radius: 15px; text-align: center; outline: none; box-sizing: border-box; background: #fafafa; }
+        .footer { margin-top: 35px; display: flex; justify-content: space-between; gap: 15px; }
+        button.nav-btn { flex: 1; padding: 15px; font-size: 18px; cursor: pointer; border: none; border-radius: 12px; background: #3498db; color: white; font-weight: bold; }
+        .score-num { font-size: 72px; color: #f39c12; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+    </style>
+</head>
+<body>
+<div id="quiz-container">
+    <div id="questions-area"></div>
+    <div id="result-area" style="display:none;">
+        <h2>測驗結束！</h2>
+        <div class="score-num" id="final-score">0 分</div>
+        <div id="review-table-container"></div>
+        <br>
+        <button class="nav-btn" onclick="location.reload()" style="background: #34495e; width: 100%;">重新挑戰</button>
+    </div>
+    <div class="footer" id="nav-area">
+        <button class="nav-btn" id="prev" onclick="go(-1)" disabled>上一題</button>
+        <button class="nav-btn" id="next" onclick="go(1)">下一題</button>
+        <button class="nav-btn" id="confirmBtn" onclick="finish()" style="display:none; background: #f39c12;">看分數</button>
+    </div>
+</div>
+<script>
+    const list = [
+        { c: "看這裡!", e: "Look at here!" }, { c: "浴室", e: "bathroom" }, { c: "臥房", e: "bedroom" },
+        { c: "廚房", e: "kitchen" }, { c: "飯廳", e: "dining room" }, { c: "客廳", e: "living room" },
+        { c: "馬桶", e: "toilet" }, { c: "三", e: "three" }, { c: "牙齒", e: "teeth" }, { c: "嘴巴", e: "mouth" }
+    ];
+    let now = 0; let userAns = new Array(list.length).fill("");
+    function playSound(text) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US'; u.rate = 0.75; window.speechSynthesis.speak(u);
+    }
+    function setup() {
+        const area = document.getElementById('questions-area');
+        list.forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = `page ${i === 0 ? 'active' : ''}`;
+            div.id = `p-${i}`;
+            div.innerHTML = `<div style="color:#aaa;">第 ${i + 1} 題</div><div class="hint">${item.c}</div><button class="speaker-btn" onclick="playSound('${item.e}')">🔊</button><br><input type="text" id="i-${i}" oninput="userAns[${i}] = this.value" autocomplete="off">`;
+            area.appendChild(div);
+        });
+    }
+    function go(dir) {
+        document.getElementById(`p-${now}`).classList.remove('active');
+        now += dir;
+        document.getElementById(`p-${now}`).classList.add('active');
+        document.getElementById('prev').disabled = (now === 0);
+        document.getElementById('next').style.display = (now === list.length - 1) ? 'none' : 'block';
+        document.getElementById('confirmBtn').style.display = (now === list.length - 1) ? 'block' : 'none';
+    }
+    function finish() {
+        let score = 0;
+        let tableHtml = `<table><tr><th>你的</th><th>正確</th></tr>`;
+        userAns.forEach((ans, i) => {
+            const isCorrect = (ans.trim().toLowerCase() === list[i].e.toLowerCase());
+            if (isCorrect) score += 10;
+            tableHtml += `<tr><td>${ans}</td><td>${list[i].e}</td></tr>`;
+        });
+        document.getElementById('questions-area').style.display = 'none';
+        document.getElementById('nav-area').style.display = 'none';
+        document.getElementById('result-area').style.display = 'block';
+        document.getElementById('final-score').innerText = score + " 分";
+        document.getElementById('review-table-container').innerHTML = tableHtml + "</table>";
+        if (score >= 60) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+    }
+    setup();
+</script>
+</body>
+</html>
