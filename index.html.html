@@ -5,176 +5,82 @@
     <title>小四英文單字挑戰</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: #fff9e6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        body { font-family: 'PingFang TC', sans-serif; background: #fff9e6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         #quiz-container { background: #fff; padding: 40px; border-radius: 25px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); width: 100%; max-width: 550px; text-align: center; border: 4px solid #ffde59; }
         .page { display: none; }
         .active { display: block; }
         .hint { font-size: 38px; font-weight: bold; color: #444; margin-bottom: 15px; }
-        
-        .speaker-btn { background: #e3f2fd; border: 2px solid #3498db; border-radius: 50%; width: 70px; height: 70px; font-size: 36px; cursor: pointer; color: #3498db; margin-bottom: 10px; transition: 0.2s; outline: none; }
-        .speaker-btn:hover { background: #3498db; color: white; transform: scale(1.1); }
-        .speaker-label { font-size: 16px; color: #888; margin-bottom: 25px; display: block; font-weight: bold; }
-
+        .speaker-btn { background: #e3f2fd; border: 2px solid #3498db; border-radius: 50%; width: 70px; height: 70px; font-size: 36px; cursor: pointer; color: #3498db; margin-bottom: 25px; transition: 0.2s; }
         input { width: 100%; padding: 18px; font-size: 24px; border: 3px solid #eee; border-radius: 15px; text-align: center; outline: none; box-sizing: border-box; background: #fafafa; }
-        input:focus { border-color: #ffde59; background: #fff; }
-        
         .footer { margin-top: 35px; display: flex; justify-content: space-between; gap: 15px; }
         button.nav-btn { flex: 1; padding: 15px; font-size: 18px; cursor: pointer; border: none; border-radius: 12px; background: #3498db; color: white; font-weight: bold; }
-        button.nav-btn:disabled { background: #eee; color: #aaa; cursor: not-allowed; }
-        
-        .preview-box { background: #fffdeb; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: left; border: 1px solid #ffeaa7; max-height: 300px; overflow-y: auto; }
-        .score-num { font-size: 72px; color: #f39c12; font-weight: bold; margin: 10px 0; }
-        .correct-text { color: #2ecc71; font-weight: bold; }
-        .wrong-text { color: #e74c3c; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; font-size: 16px; }
-        .wrong-row { background-color: #fff5f5; }
+        .score-num { font-size: 72px; color: #f39c12; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
     </style>
 </head>
 <body>
-
 <div id="quiz-container">
     <div id="questions-area"></div>
-
-    <div id="preview-area" style="display:none;">
-        <h2 style="color: #f39c12;">小朋友，交卷前檢查一下！</h2>
-        <div class="score-num" id="pre-score">0 分</div>
-        <div id="preview-list" class="preview-box"></div>
-        <div class="footer">
-            <button class="nav-btn" onclick="backToQuiz()" style="background: #95a5a6;">1 返回更改</button>
-            <button class="nav-btn" onclick="finalSubmit()" style="background: #27ae60;">2 確認並繳交</button>
-        </div>
-    </div>
-
     <div id="result-area" style="display:none;">
-        <h2>正式得分</h2>
-        <div class="score-num" id="final-score">0</div>
-        <div id="final-msg" style="font-size: 20px; font-weight: bold; margin-bottom: 15px;"></div>
+        <h2>測驗結束！</h2>
+        <div class="score-num" id="final-score">0 分</div>
         <div id="review-table-container"></div>
         <br>
         <button class="nav-btn" onclick="location.reload()" style="background: #34495e; width: 100%;">重新挑戰</button>
     </div>
-
     <div class="footer" id="nav-area">
         <button class="nav-btn" id="prev" onclick="go(-1)" disabled>上一題</button>
         <button class="nav-btn" id="next" onclick="go(1)">下一題</button>
-        <button class="nav-btn" id="confirmBtn" onclick="showPreview()" style="display:none; background: #f39c12;">確認答案</button>
+        <button class="nav-btn" id="confirmBtn" onclick="finish()" style="display:none; background: #f39c12;">看分數</button>
     </div>
 </div>
-
 <script>
     const list = [
-        { c: "看這裡!", e: "Look at here!" },
-        { c: "浴室", e: "bathroom" },
-        { c: "臥房", e: "bedroom" },
-        { c: "廚房", e: "kitchen" },
-        { c: "飯廳", e: "dining room" },
-        { c: "客廳", e: "living room" },
-        { c: "馬桶", e: "toilet" },
-        { c: "三", e: "three" },
-        { c: "牙齒", e: "teeth" },
-        { c: "嘴巴", e: "mouth" }
+        { c: "看這裡!", e: "Look at here!" }, { c: "浴室", e: "bathroom" }, { c: "臥房", e: "bedroom" },
+        { c: "廚房", e: "kitchen" }, { c: "飯廳", e: "dining room" }, { c: "客廳", e: "living room" },
+        { c: "馬桶", e: "toilet" }, { c: "三", e: "three" }, { c: "牙齒", e: "teeth" }, { c: "嘴巴", e: "mouth" }
     ];
-
-    let now = 0;
-    let userAns = new Array(list.length).fill("");
-
+    let now = 0; let userAns = new Array(list.length).fill("");
     function playSound(text) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.75; 
-        utterance.pitch = 1.1; 
-        window.speechSynthesis.speak(utterance);
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US'; u.rate = 0.75; window.speechSynthesis.speak(u);
     }
-
     function setup() {
         const area = document.getElementById('questions-area');
         list.forEach((item, i) => {
             const div = document.createElement('div');
             div.className = `page ${i === 0 ? 'active' : ''}`;
             div.id = `p-${i}`;
-            div.innerHTML = `
-                <div style="color:#aaa; font-weight:bold; margin-bottom:10px;">第 ${i + 1} 題 / 共 10 題</div>
-                <div class="hint">${item.c}</div>
-                <button class="speaker-btn" onclick="playSound('${item.e.replace(/'/g, "\\'")}')">🔊</button>
-                <span class="speaker-label">點我聽聽看怎麼唸</span>
-                <input type="text" id="i-${i}" value="${userAns[i]}" placeholder="在這裡寫英文..." oninput="userAns[${i}] = this.value" autocomplete="off">
-            `;
+            div.innerHTML = `<div style="color:#aaa;">第 ${i + 1} 題</div><div class="hint">${item.c}</div><button class="speaker-btn" onclick="playSound('${item.e}')">🔊</button><br><input type="text" id="i-${i}" oninput="userAns[${i}] = this.value" autocomplete="off">`;
             area.appendChild(div);
         });
     }
-
     function go(dir) {
-        window.speechSynthesis.cancel();
         document.getElementById(`p-${now}`).classList.remove('active');
         now += dir;
         document.getElementById(`p-${now}`).classList.add('active');
         document.getElementById('prev').disabled = (now === 0);
-        
-        if (now === list.length - 1) {
-            document.getElementById('next').style.display = 'none';
-            document.getElementById('confirmBtn').style.display = 'block';
-        } else {
-            document.getElementById('next').style.display = 'block';
-            document.getElementById('confirmBtn').style.display = 'none';
-        }
+        document.getElementById('next').style.display = (now === list.length - 1) ? 'none' : 'block';
+        document.getElementById('confirmBtn').style.display = (now === list.length - 1) ? 'block' : 'none';
     }
-
-    function showPreview() {
-        window.speechSynthesis.cancel();
+    function finish() {
         let score = 0;
-        let html = "<div style='line-height: 2;'>";
+        let tableHtml = `<table><tr><th>你的</th><th>正確</th></tr>`;
         userAns.forEach((ans, i) => {
-            const cleanAns = ans.trim();
-            const isCorrect = (cleanAns.toLowerCase() === list[i].e.toLowerCase());
+            const isCorrect = (ans.trim().toLowerCase() === list[i].e.toLowerCase());
             if (isCorrect) score += 10;
-            const status = isCorrect ? '<span class="correct-text">✔ 對了！</span>' : '<span class="wrong-text">✘ 寫錯了</span>';
-            html += `<div><b>${i+1}.</b> ${cleanAns || '(沒寫)'} ➔ ${status}</div>`;
+            tableHtml += `<tr><td>${ans}</td><td>${list[i].e}</td></tr>`;
         });
-        html += "</div>";
-
         document.getElementById('questions-area').style.display = 'none';
         document.getElementById('nav-area').style.display = 'none';
-        document.getElementById('preview-area').style.display = 'block';
-        document.getElementById('pre-score').innerText = score + " 分";
-        document.getElementById('preview-list').innerHTML = html;
-    }
-
-    function backToQuiz() {
-        document.getElementById('preview-area').style.display = 'none';
-        document.getElementById('questions-area').style.display = 'block';
-        document.getElementById('nav-area').style.display = 'flex';
-    }
-
-    function finalSubmit() {
-        let score = 0;
-        let tableHtml = `<table><tr><th>題號</th><th>對錯</th><th>你的</th><th>正確</th></tr>`;
-
-        userAns.forEach((ans, i) => {
-            const cleanAns = ans.trim(); 
-            const isCorrect = (cleanAns.toLowerCase() === list[i].e.toLowerCase());
-            if (isCorrect) score += 10;
-            tableHtml += `<tr class="${isCorrect ? '' : 'wrong-row'}"><td>${i+1}</td><td class="${isCorrect ? 'correct-text' : 'wrong-text'}">${isCorrect ? '✔' : '✘'}</td><td>${cleanAns || '-'}</td><td>${list[i].e}</td></tr>`;
-        });
-        tableHtml += `</table>`;
-
-        document.getElementById('preview-area').style.display = 'none';
         document.getElementById('result-area').style.display = 'block';
         document.getElementById('final-score').innerText = score + " 分";
-        document.getElementById('review-table-container').innerHTML = tableHtml;
-
-        const msgArea = document.getElementById('final-msg');
-        if (score >= 60) {
-            msgArea.innerHTML = `<div style="color:#2ecc71;">🎉 恭喜通過！趕快將分數交給老師看</div>`;
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-        } else {
-            msgArea.innerHTML = `<div style="color:#e67e22;">💪 先把單字背熟，再按下重新挑戰唷</div>`;
-        }
+        document.getElementById('review-table-container').innerHTML = tableHtml + "</table>";
+        if (score >= 60) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
     }
-
     setup();
 </script>
-
 </body>
 </html>
